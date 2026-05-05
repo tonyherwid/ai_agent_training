@@ -1,0 +1,29 @@
+data_preprocessing_task:
+  description: >
+    Extract data from the file located at {file_path}. Focus on the 'time' column and a 
+    specific target column (e.g., 'Cyclone_Gas_Outlet_Temp'). 
+    Perform any necessary outlier removal and ensure the 'ds' column is 
+    in proper datetime format.
+  expected_output: >
+    A cleaned pandas DataFrame ready for Prophet modeling with columns 'ds' and 'y'.
+  agent: data_preparation_specialist
+
+model_training_and_forecasting:
+  description: >
+    Using the Prophet library, fit a model to the 'ds' and 'y' data. 
+    Generate a forecast for the next 24 to 48 hours based on the 5-minute 
+    intervals found in the original data. Include uncertainty intervals.
+  expected_output: >
+    A forecast component object and a dataframe containing 'yhat', 
+    'yhat_lower', and 'yhat_upper'.
+  agent: prophet_forecasting_specialist
+
+final_analysis_report:
+  description: >
+    Review the trend and seasonality components provided by the Prophet model. 
+    Compare the forecast against historical sensor thresholds in the file located at {file_path} 
+    and write a summary of expected plant performance or maintenance needs.
+  expected_output: >
+    A comprehensive technical report summarizing the predicted behavior of 
+    the cyclone system and any detected anomalies.
+  agent: industrial_insight_analyst

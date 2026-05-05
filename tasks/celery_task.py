@@ -7,6 +7,7 @@ from src.indoprimaflow.crews.file_analyzer.file_analyzer import FileAnalyzer
 from src.indoprimaflow.crews.json_analyzer.json_analyzer import JsonAnalyzer
 from src.indoprimaflow.crews.excel_analyzer.excel_analyzer import ExcelAnalyzer
 from src.indoprimaflow.crews.anomaly_crew.anomaly_crew import AnomalyCrew
+from src.indoprimaflow.crews.prophet_crew.prophet_crew import ProphetCrew
 import logging
 import traceback
 
@@ -97,5 +98,16 @@ def anomaly_detection(self, file:str):
         return result.json_dict
     except Exception as e:
         logger.error(f"Error in anomaly_detection task: {e}")
+        logger.error(traceback.format_exc())
+        raise e
+    
+@celery_app.task(name="forecast_report", bind=True)
+def forecast_report(self, file_path:str):
+    self.update_state(state="RUNNING", meta={"current":f"start job for {file_path}"})
+    try:
+        result = ProphetCrew().crew().kickoff(inputs={"file_path": file_path})
+        return result.json_dict
+    except Exception as e:
+        logger.error(f"Error in forecast_report task: {e}")
         logger.error(traceback.format_exc())
         raise e

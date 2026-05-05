@@ -136,6 +136,58 @@ async def anomaly_detection(file: UploadFile = File(...)):
     task = celeryTask.anomaly_detection.delay(file_path)
     return {"task_id": task.id, "file_path": file_path}
 
+@app.post("/anomaly_detection")
+async def anomaly_detection(file: UploadFile = File(...)):
+    if file.content_type != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Only Excel files are allowed.")
+
+    file_extension = os.path.splitext(file.filename)[1] or ".xlsx"
+    unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+    file_path = os.path.join(EXCEL_FOLDER, unique_filename)
+
+    content = await file.read()
+
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    task = celeryTask.anomaly_detection.delay(file_path)
+    return {"task_id": task.id, "file_path": file_path}
+
+@app.post("/forecast_report")
+async def forecast_report(file: UploadFile = File(...)):
+    """
+    Upload a file and immediately trigger the Prophet analysis.
+    The filename is handled dynamically.
+    """
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Invalid format. Please upload an Excel file.")
+
+    # Generate a unique file path to avoid conflicts and ensure the worker can access it
+    file_extension = os.path.splitext(file.filename)[1] or ".xlsx"  # Default to .xlsx if no extension
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+    # Define the dynamic file path
+    file_path = os.path.join(EXCEL_FOLDER, unique_filename)
+    absolute_file_path = os.path.abspath(file_path)
+
+    try:
+        # Save the uploaded file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Trigger Celery task with the dynamic filename
+        # We pass the path so the worker knows exactly where it is
+        task = celeryTask.forecast_report.delay(absolute_file_path)
+        
+        return {
+            "task_id": task.id, 
+            "status": "Started", 
+            "filename": file.filename,
+            "unique_filename": unique_filename
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/status/{task_id}", response_model=ResearchStatus)
 async def get_status(task_id: str):
     task_result = celeryTask.celery_app.AsyncResult(task_id)
