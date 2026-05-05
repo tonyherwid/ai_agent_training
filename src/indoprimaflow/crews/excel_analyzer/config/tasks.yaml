@@ -1,0 +1,8 @@
+excel_analyzer_task:
+  description: >
+    conduct a thorough analysis of an existing {file} and make sure you identify every part from the report, particularly related to cyclone data analysis.
+  expected_output: >
+    JSON objects containing insightful points and indicators about the cyclone data analysis, consisting of these topics :
+    cyclone inlet gas temp, cyclone material temp, cyclone outlet gas draft, cyclone cone draft, 
+    cyclone gas outlet temp and cyclone inlet draft.
+  agent: excel_analyzer

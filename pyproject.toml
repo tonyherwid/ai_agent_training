@@ -1,0 +1,28 @@
+[project]
+name = "indoprimaflow"
+version = "0.1.0"
+description = "indoprimaflow using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "celery>=5.6.3",
+    "crewai[tools]==1.14.3",
+    "fastapi>=0.136.1",
+    "pandas>=2.3.3",
+    "redis>=7.4.0",
+    "scikit-learn>=1.7.2",
+    "uvicorn>=0.46.0",
+]
+
+[project.scripts]
+kickoff = "indoprimaflow.main:kickoff"
+run_crew = "indoprimaflow.main:kickoff"
+plot = "indoprimaflow.main:plot"
+run_with_trigger = "indoprimaflow.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"

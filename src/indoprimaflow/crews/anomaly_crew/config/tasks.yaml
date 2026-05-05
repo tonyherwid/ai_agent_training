@@ -1,0 +1,8 @@
+anomaly_detection_task:
+  description: >
+    You are responsible for analyzing the result of 'tool_anomaly' using {file} and providing insights.
+    If 'anomali' is greather than ('total_data' / 2) show reminder that there is a problem
+    with the data. Otherwise show just information.
+  expected_output: >
+    Reminder based on custom tool 'tool_anomaly' analyze result, and insights about the anomaly analysis.
+  agent: anomaly_detection

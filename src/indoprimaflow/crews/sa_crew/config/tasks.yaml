@@ -1,0 +1,13 @@
+analyzing_task:
+  description: >
+    Identifying gaps in current systems and workflows for {topic} application in {style} wording style.
+    Gathering and documenting user and business requirements for {topic} application in {style} wording style.
+    Designing system specifications that align with organizational goals for {topic} application in {style} wording style.
+    Bridging communication between stakeholders, developers, and end users for {topic} application in {style} wording style.
+    Ensuring systems are reliable, user-friendly, and adaptable to change for {topic} application in {style} wording style.
+    Summarizing structured datafindings and recommendations for DBA to build ERD.
+    Summarizing system behavior and logic for programmers to write code.
+  expected_output: >
+    DBA gets: structured data to builds ERD. Programmer gets: system behavior + logic to writes code
+    Formatted as markdown without '```'
+  agent: system_analyst

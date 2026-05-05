@@ -1,0 +1,34 @@
+dba_task:
+  description: >
+    Ensure database availability and uptime
+    Design and maintain ERD (Entity-Relationship Diagrams) about {topic} based on the requirements provided by system analyst.
+    Maintain data security and access control
+    Optimize database performance and queries
+    Manage backups and disaster recovery
+    Ensure data integrity and consistency
+  expected_output: >
+    A well-designed MySQL Entity-Relationship Diagram (ERD) about {topic} that includes:
+    - Properly defined tables with primary keys
+    - Accurate foreign key relationships
+    - Normalized structure (reduced redundancy)
+    - Clearly defined relationships (1:1, 1:M, M:M)
+    - Consistent naming conventions
+    - Optional: indexing suggestions for performance optimization 
+  agent: dba
+
+developer_task:
+  description: >
+    Design, build, test, and maintain high-quality {topic} software solutions in {language} programing language based on 
+    the requirements and specifications provided.
+    Ensure the solutions meet user needs and 
+    business requirements while ensuring scalability, security, and performance. 
+    Continuously improve system reliability and contribute to efficient development practices within the team.
+  expected_output: >
+    Clean, maintainable CodeIgniter controllers, models, and views code.
+    Working REST APIs or web features based on requirements.
+    Database queries and migrations (if used).
+    Basic unit-tested and secure code.
+    Bug fixes and performance improvements.
+    Minimal, readable documentation where needed.
+    Formatted as markdown without '```'
+  agent: developer

@@ -1,0 +1,6 @@
+task_file_analyzer:
+  description: >
+    conduct a thorough analysis of an existing {file} and make sure you identify every part from the report, particularly related to sales figures.
+  expected_output: >
+    JSON objects containing 5 insightful points and indicators about the sales report analyzed document
+  agent: agent_file_analyzer
