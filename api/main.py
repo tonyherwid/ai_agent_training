@@ -18,6 +18,9 @@ os.makedirs(JSON_FOLDER, exist_ok=True)
 EXCEL_FOLDER = "excel_files"
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
 
+IMAGE_FOLDER = "image_files"
+os.makedirs(IMAGE_FOLDER, exist_ok=True)
+
 class ResearchInput(BaseModel):
     topic: str
     style: str
@@ -136,23 +139,6 @@ async def anomaly_detection(file: UploadFile = File(...)):
     task = celeryTask.anomaly_detection.delay(file_path)
     return {"task_id": task.id, "file_path": file_path}
 
-@app.post("/anomaly_detection")
-async def anomaly_detection(file: UploadFile = File(...)):
-    if file.content_type != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Only Excel files are allowed.")
-
-    file_extension = os.path.splitext(file.filename)[1] or ".xlsx"
-    unique_filename = f"{uuid.uuid4().hex}{file_extension}"
-    file_path = os.path.join(EXCEL_FOLDER, unique_filename)
-
-    content = await file.read()
-
-    with open(file_path, "wb") as f:
-        f.write(content)
-
-    task = celeryTask.anomaly_detection.delay(file_path)
-    return {"task_id": task.id, "file_path": file_path}
-
 @app.post("/forecast_report")
 async def forecast_report(file: UploadFile = File(...)):
     """
@@ -187,6 +173,23 @@ async def forecast_report(file: UploadFile = File(...)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/helmet_detection")
+async def helmet_detection(file: UploadFile = File(...)):
+    if not file.filename.endswith(('.jpg', '.jpeg', '.png')):
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Only image files (jpg, jpeg, png) are allowed.")
+
+    file_extension = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+    file_path = os.path.join(IMAGE_FOLDER, unique_filename)
+
+    content = await file.read()
+
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    task = celeryTask.helmet_detection.delay(file_path)
+    return {"task_id": task.id, "file_path": file_path}
 
 @app.get("/status/{task_id}", response_model=ResearchStatus)
 async def get_status(task_id: str):

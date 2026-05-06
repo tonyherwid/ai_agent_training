@@ -8,6 +8,7 @@ from src.indoprimaflow.crews.json_analyzer.json_analyzer import JsonAnalyzer
 from src.indoprimaflow.crews.excel_analyzer.excel_analyzer import ExcelAnalyzer
 from src.indoprimaflow.crews.anomaly_crew.anomaly_crew import AnomalyCrew
 from src.indoprimaflow.crews.prophet_crew.prophet_crew import ProphetCrew
+from src.indoprimaflow.crews.helmet_detect_crew.helmet_detect_crew import HelmetDetectCrew
 import logging
 import traceback
 
@@ -109,5 +110,16 @@ def forecast_report(self, file_path:str):
         return result.json_dict
     except Exception as e:
         logger.error(f"Error in forecast_report task: {e}")
+        logger.error(traceback.format_exc())
+        raise e
+    
+@celery_app.task(name="helmet_detection", bind=True)
+def helmet_detection(self, file_path:str):
+    self.update_state(state="RUNNING", meta={"current":f"start job for {file_path}"})
+    try:
+        result = HelmetDetectCrew().crew().kickoff(inputs={"file_path": file_path})
+        return result.json_dict
+    except Exception as e:
+        logger.error(f"Error in helmet_detection task: {e}")
         logger.error(traceback.format_exc())
         raise e

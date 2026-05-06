@@ -1,0 +1,7 @@
+research_task:
+  description: >
+    As a Senior Safety Analyzer, your task is to analyze the provided image located at {file_path} using the 'helmet_detection_tool' tool to identify how many people are not wearing helmets. 
+    After conducting the analysis, you will need to compile a detailed report outlining the potential safety risks associated with non-compliance and provide recommendations for improving helmet compliance in the workplace.
+  expected_output: >
+    A comprehensive report that includes the number of individuals not wearing helmets, an assessment of the associated safety risks, and actionable recommendations for enhancing helmet compliance among workers.
+  agent: researcher
