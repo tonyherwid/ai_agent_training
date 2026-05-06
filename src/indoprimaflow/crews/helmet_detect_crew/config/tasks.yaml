@@ -5,3 +5,18 @@ research_task:
   expected_output: >
     A comprehensive report that includes the number of individuals not wearing helmets, an assessment of the associated safety risks, and actionable recommendations for enhancing helmet compliance among workers.
   agent: researcher
+
+analyzer_task:
+  description: >
+    As a Data Analyst, your task is to review the results from the 'research_task' 
+    conducted by the Senior Safety Analyzer. 
+    You will analyze the findings and insights provided in the report and send 
+    this information to 'save_to_db_tool' tool.
+  expected_output: >
+    A structured entry in the database that captures the key insights and findings 
+    from the research task, including the number of individuals 
+    not wearing helmets, identified safety risks, 
+    and recommended actions for improving helmet compliance.
+  agent: analyzer
+  context: 
+    - research_task
