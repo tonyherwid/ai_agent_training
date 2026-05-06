@@ -1,3 +1,4 @@
+import os
 from typing import Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
@@ -16,9 +17,9 @@ class SaveToDBTool(BaseTool):
     def _run(self, head: int, helmet: int, person: int) -> str:
         try:
             connect = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="root",
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASS"),
                 database="helmet_report"
             )
             cursor = connect.cursor()
