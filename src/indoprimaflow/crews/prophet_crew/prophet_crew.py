@@ -23,18 +23,10 @@ class ProphetCrew():
     # If you would like to add tools to your agents, you can learn more about it here:
     # https://docs.crewai.com/concepts/agents#agent-tools
     @agent
-    def data_preparation_specialist(self) -> Agent:
-        return Agent(
-            config=self.agents_config['data_preparation_specialist'], # type: ignore[index]
-            tools=[IndustrialDataTools.read_and_prepare_industrial_data],
-            verbose=True
-        )
-
-    @agent
     def prophet_forecasting_specialist(self) -> Agent:
         return Agent(
             config=self.agents_config['prophet_forecasting_specialist'], # type: ignore[index]
-            tools=[IndustrialDataTools.run_prophet_forecast_from_file],
+            tools=[IndustrialDataTools()], # Add your tool here
             verbose=True
         )
     
@@ -48,12 +40,6 @@ class ProphetCrew():
     # To learn more about structured task outputs,
     # task dependencies, and task callbacks, check out the documentation:
     # https://docs.crewai.com/concepts/tasks#overview-of-a-task
-    @task
-    def data_preprocessing_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['data_preprocessing_task'], # type: ignore[index]
-        )
-
     @task
     def model_training_and_forecasting(self) -> Task:
         return Task(

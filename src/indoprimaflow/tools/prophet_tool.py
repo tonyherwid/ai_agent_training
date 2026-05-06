@@ -1,11 +1,21 @@
 import pandas as pd
+from typing import Type
+from pydantic import BaseModel, Field
 from prophet import Prophet
-from crewai.tools import tool
+from crewai.tools import tool, BaseTool
 import os
 
-class IndustrialDataTools:
-    @tool("read_and_prepare_industrial_data")
-    def read_and_prepare_industrial_data(file_path: str) -> str:
+from indoprimaflow.tools.tool_anomaly import ToolAnomalyInput
+
+class IndustrialDataToolsInput(BaseModel):
+    file_path: str = Field(..., description="The file path to the industrial data to be processed or forecasted.")
+
+class IndustrialDataTools(BaseTool):
+    name: str = "industrial_data_tools"
+    description: str = "A tool to analyze files and give a forecast."
+    input_schema: Type[BaseModel] = IndustrialDataToolsInput
+
+    def _run(self, file_path: str) -> str:
         """
         Reads industrial data from an Excel file, prepares it for forecasting,
         and saves it to a temporary CSV file.
@@ -21,19 +31,9 @@ class IndustrialDataTools:
         # Save to a temporary file and return the path
         temp_file_path = 'temp_data.csv'
         df.to_csv(temp_file_path, index=False)
-        return os.path.abspath(temp_file_path)
-
-    @tool("run_prophet_forecast_from_file")
-    def run_prophet_forecast_from_file(file_path: str) -> str:
-        """
-        Trains a Prophet model using data from a specified file path
-        and returns a 48-hour forecast.
-        """
-
-        absolute_file_path = os.path.abspath(file_path)
 
         # Read the prepared data
-        data = pd.read_csv(absolute_file_path)
+        data = pd.read_csv(temp_file_path)
         data['ds'] = pd.to_datetime(data['ds'])
 
         # Train the model and forecast
