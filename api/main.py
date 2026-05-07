@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Response
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Response, Request
 import os
 import uuid
 import json
@@ -8,6 +8,14 @@ import tasks.celery_task as celeryTask
 from celery.result import AsyncResult
 import shutil
 import pandas as pd
+import httpx
+from telegram import Update, Bot
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from contextlib import asynccontextmanager
+import logging
+
+TOKEN=os.getenv("TELEGRAM_BOT_API_KEY")
+WEBHOOK_URL=os.getenv("WEBHOOK_URL")
 
 TEXT_FOLDER = "text_files"
 os.makedirs(TEXT_FOLDER, exist_ok=True)
@@ -33,7 +41,114 @@ class ResearchStatus(BaseModel):
     result: dict | str | None = None
     error: str | None = None
 
-app = FastAPI()
+ptb = (
+    Application.builder()
+    .updater(None)
+    .token(TOKEN)
+    .read_timeout(7)
+    .get_updates_read_timeout(42)
+    .build()
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await ptb.bot.set_webhook(WEBHOOK_URL)
+    async with ptb:
+        await ptb.start()
+        yield
+    await ptb.stop()
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello! I'm your research assistant bot.")
+    await update.message.reply_text("I will gladly help you with your research needs. Please let me know what topic you're interested in and how I can assist you.")
+
+ptb.add_handler(CommandHandler("start", start_command))
+
+async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    photo_size = update.message.photo[-1]
+    file_id = photo_size.file_id
+    file_unique_id = photo_size.file_unique_id
+    width = photo_size.width
+    height = photo_size.height
+    file_size = photo_size.file_size
+
+    reply_text = (
+        f"<b>Received Image Metadata</b>:\n"
+        f"File ID: {file_id}\n"
+        f"File Unique ID: {file_unique_id}\n"
+        f"Width: {width}\n"
+        f"Height: {height}\n"
+        f"File Size: {file_size}\n"
+    )
+    await update.message.reply_text(reply_text, parse_mode="HTML")
+
+ptb.add_handler(MessageHandler(filters.PHOTO, image_handler))
+
+async def bot_research(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Please provide a research topic after the command. For example: /research AI in healthcare", parse_mode="HTML")
+        return
+    
+    input_data = ResearchInput(topic=" ".join(context.args), style="detailed")
+    task = celeryTask.research.delay(input_data.topic, input_data.style)
+    await update.message.chat.send_action(action="typing")
+    await update.message.reply_text(f"Research task started with ID: {task.id}")
+
+ptb.add_handler(CommandHandler("research", bot_research))
+
+async def bot_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Please provide a task ID after the command. For example: /status task_id", parse_mode="HTML")
+        return
+    
+    task_id = context.args[0]
+    task_result = AsyncResult(task_id, app=celeryTask.celery_app)
+
+    if task_result.state == "PENDING":
+        await update.message.reply_text(f"Task {task_id} is pending.")
+    elif task_result.state == "RUNNING":
+        await update.message.reply_text(f"Task {task_id} is running.")
+    elif task_result.state == "SUCCESS":
+        result = task_result.result
+        if isinstance(result, str):
+            try:
+                result = json.loads(result)
+            except Exception:
+                pass
+        await update.message.reply_text(f"Task {task_id} completed successfully. Result: ")
+
+        for part in split_long_message(str(result)):
+            await update.message.chat.send_action(action="typing")
+            await update.message.reply_text(part)
+    elif task_result.state == "FAILURE":
+        await update.message.reply_text(f"Task {task_id} failed with error: {str(task_result.result)}")
+    else:
+        await update.message.reply_text(f"Task {task_id} is in an unknown state: {task_result.state}")
+
+ptb.add_handler(CommandHandler("status", bot_status))
+
+def split_long_message(text: str, max_len:int = 300):
+    parts = []
+    while len(text) > max_len:
+        split_index = text.rfind("\n", 0, max_len)
+        if split_index == -1:
+            split_index = max_len
+        parts.append(text[:split_index])
+        text = text[split_index:].lstrip()
+
+    parts.append(text)
+    return parts
+
+app = FastAPI(lifespan=lifespan)
+
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    req_json = await request.json()
+    update = Update.de_json(req_json, ptb.bot)
+    await ptb.process_update(update)
+
+    return Response(status_code=HTTPStatus.OK)
+    
 @app.post("/test")
 async def test():
     # Simulate research process
